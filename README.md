@@ -10,7 +10,7 @@
 #### For what purpose?
 It is all too common to have people on VRChat friending others in order to build trust to increase their [Trust Rank](https://docs.vrchat.com/docs/vrchat-safety-and-trust-system#trust-rank) and reach the coveted Trusted User status. 
 
-As a direct result, many users on VRChat have lists of "friends" consisitng of hundreds, if not thousands, of users that are barely known or interacted with. Despite this, the process of unfriending hundreds of people at a time is tedious and time-consuming as the fastest way is to click through several prompts on the [VRChat Website](https://vrchat.com/home).
+As a direct result, many users on VRChat have lists of "friends" consisting of hundreds, if not thousands, of users that are barely known or interacted with. Despite this, the process of unfriending hundreds of people at a time is tedious and time-consuming as the fastest way is to click through several prompts on the [VRChat Website](https://vrchat.com/home).
 
 #### I don't want to unadd all of my friends, though!!
 VRCU is not made to unfriend absolutely everyone on your friends list. The program has its own system in place to make sure that you keep the people closest to you friended.
@@ -48,7 +48,7 @@ VRCU is not made to unfriend absolutely everyone on your friends list. The progr
         - Paste one username per line (press enter after each username). Usernames are CASE SENSITIVE!
         - Type `end` into the console and press enter when you have entered the username of each friend you wish to keep.
 3. Find your 2-Factor Authentication code.
-    - These are eithor found in the inbox of your associated email OR your authenticator app.
+    - These are either found in the inbox of your associated email OR your authenticator app.
     - Enter the code into the website in the browser opened by the program.
     - Ensure that the friends list on the side of the screen is visible.
 4. Type the number `1` into the console in order to continue with the unfriending process.
