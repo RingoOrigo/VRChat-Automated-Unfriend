@@ -1,9 +1,9 @@
 ## Quick-Links
 
-- [Feature List](https://github.com/RingoOrigo/VRChat-Automated-Unfriend/edit/main/README.md#features)
-- [Usage Guide](https://github.com/RingoOrigo/VRChat-Automated-Unfriend/edit/main/README.md#usage-guide)
-- [Dependencies](https://github.com/RingoOrigo/VRChat-Automated-Unfriend/edit/main/README.md#dependencies)
-- [Contributing](https://github.com/RingoOrigo/VRChat-Automated-Unfriend/edit/main/README.md#contributing)
+- [Feature List](https://github.com/RingoOrigo/VRChat-Automated-Unfriend#features)
+- [Usage Guide](https://github.com/RingoOrigo/VRChat-Automated-Unfriend#usage-guide)
+- [Dependencies](https://github.com/RingoOrigo/VRChat-Automated-Unfriend#dependencies)
+- [Contributing](https://github.com/RingoOrigo/VRChat-Automated-Unfriend#contributing)
 - For extra assistance that may not be covered in this readme, ask for help from [Ouroboros](https://discord.gg/e3ffGxdxzM)
 # Automatically Unfriend Users on VRChat
 
