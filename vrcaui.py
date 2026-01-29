@@ -55,6 +55,19 @@ class UIHandler:
             else:
                 print("Error verifying 2FA code")
 
+    def showMainWindow (self):
+        """Display the main window of the program"""
+        # Load both the main UI and options files.
+        main_ui_file = QFile("interface/main.ui")
+        options_ui_file = QFile("interface/options.ui")
+
+        # Ready each of them to be shown at any moment.
+        self.window = self.loader.load(main_ui_file)
+        self.currentPopup = self.loader.lod(options_ui_file)
+
+        # Show the main UI. Only open options later.
+        self.widow.show()
+
     def showMFA (self, failed_attempt = False):
         """Prompt for 2FA code and continue the login process."""
 

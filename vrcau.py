@@ -25,7 +25,7 @@ class VRCAU:
         self.client = None
         self.auth_client = None
         
-        self.current_user: None
+        self.current_user = None
 
     def __initClient (self):
         """Sets a custom User-Agent for the VRChat API client."""
@@ -74,7 +74,8 @@ class VRCAU:
         except vrchatapi.ApiException as e:
             raise ApiError()
 
-        self.current_user = self.auth_client.get_current_user()        
+        self.current_user = self.auth_client.get_current_user()
+        print(self.current_user)
 
     def destroy (self):
         """Destroy the current instance and securely save the required data if requested (Data is saved locally)."""
