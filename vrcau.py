@@ -10,13 +10,12 @@ from selenium.webdriver.edge.options import Options
 
 class VRCAU:
 
-    def __init__ (self, username: str = "", password: str = "", auth_code: str = "", save_login: bool = False):
+    def __init__ (self, username: str = "", password: str = "", save_login: bool = False):
         # Important variables to use throughout the program. As the user must be able to log in, we must use their credentials.
         # The auth token should be stored securely in order to speed up the login process upon future uses.
         # Have the user opt-in to saving their info for this purpose.
         self.username: str = username
         self.password: str = password
-        self.auth_code: str = auth_code
         self.token: str = None
         self.save_login: bool = save_login
         self.driver = self.__setDriver()
@@ -36,7 +35,7 @@ class VRCAU:
         # As this program is intended to run on Windows machines, we can assume that Edge is installed.
         return webdriver.Edge(options=options)
 
-    def login (self, ui=None):
+    def login (self):
         """Log in to VRChat via a Selenium Webdriver using the provided credentials."""
         self.driver.get("https://vrchat.com/home")
         
@@ -66,18 +65,33 @@ class VRCAU:
 
         self.__testLoop()
 
-    def authenticate (self, ui=None):
-        """Complete the login process via multi-factor authentication if necessary."""
+    def authenticate (self, auth_code: str) -> bool:
+        """Complete the login process via multi-factor authentication if necessary. Returns true if successful, raises exception otherwise."""
 
         # Open new window to prompt for 2FA code.
-        print("TODO: Implement 2FA support!!")
-        # next_button = self.driver.find_element(By.XPATH, '//*[@id="app"]/main/div[2]/div[2]/div/form/div/div[3]/button')
+        next_button = self.driver.find_element(By.XPATH, '//*[@id="app"]/main/div[2]/div[2]/div/form/div/div[3]/button')
 
-        # for i in range(6):
-        #     auth_field = self.driver.find_element(By.XPATH, f'//*[@id="app"]/main/div[2]/div[2]/div/form/div/div[2]/div/div[{i + 1}]/input')
-        #     auth_field.send_keys(self.auth_code[i])
+        for i in range(6):
+            auth_field = self.driver.find_element(By.XPATH, f'//*[@id="app"]/main/div[2]/div[2]/div/form/div/div[2]/div/div[{i + 1}]/input')
+            auth_field.send_keys(auth_code[i])
 
-        # next_button.click()
+        try:
+            popup = self.driver.find_element(By.XPATH, '//*[@id="onetrust-accept-btn-handler"]')
+            popup.click()
+        except:
+            pass
+
+        next_button.click()
+
+        try:
+            # Wait until the URL changes. If it does not change, the 2FA code was incorrect.
+            WebDriverWait(self.driver, 1).until(
+                lambda d: d.current_url == "https://vrchat.com/home"
+            )
+
+            return True
+        except TimeoutException:
+            raise LoginError()
 
     def destroy (self):
         """Destroy the current instance and securely save the required data if requested (Data is saved locally)."""
