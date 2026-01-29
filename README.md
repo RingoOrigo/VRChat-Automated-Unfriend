@@ -1,3 +1,8 @@
+# VRCAU - GUI EDITION
+This branch is an entire rewrite of the program detailed below. Much of the information is irrelevant, but the premise remains the same. This will eventually be updated to be accurate, and this branch will eventually become the main branch as this program is finished.
+*Yes, this is being revived after several years of inactivity.*
+
+
 ## Quick-Links
 
 - [Feature List](https://github.com/RingoOrigo/VRChat-Automated-Unfriend#features)
