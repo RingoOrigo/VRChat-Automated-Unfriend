@@ -16,20 +16,27 @@ class UIHandler:
         self.currentPopup = None
 
     def showLogin (self):
-        self.window.show()
 
-        login_button = self.window.loginButton
-        login_button.clicked.connect(lambda: self.setLoginInfo())
+        try: #Attempt to log in via cookies.
+            self.client.login(c = True)
+        except vrcau.NoCookiesFoundException:
+            # Proceed to normal login flow if cookies are unavailable or otherwise do not work.
+            print("LOG: Cookies not found. Logging in normally")
+            self.window.show()
 
-        # Ready the error text field
-        self.window.errorField.setVisible(False)
-        
-        # Ensure that the destroy function is called when the window closes.
-        self.app.setQuitOnLastWindowClosed(False)
-        self.app.lastWindowClosed.connect(self.client.destroy)
+            login_button = self.window.loginButton
+            login_button.clicked.connect(lambda: self.setLoginInfo())
 
+            # Ready the error text field
+            self.window.errorField.setVisible(False)
+            
+            # Ensure that the destroy function is called when the window closes.
+            self.app.setQuitOnLastWindowClosed(False)
+            self.app.lastWindowClosed.connect(self.client.destroy)
 
-        sys.exit(self.app.exec())
+            sys.exit(self.app.exec())
+
+        self.showMainWindow(skipped_login = True)
 
     def setLoginInfo (self):
         self.client.username = self.window.usernameField.text().strip()
@@ -56,24 +63,32 @@ class UIHandler:
             else:
                 print("Error verifying 2FA code")
 
-    def showMainWindow (self):
+        print("LOG: Verified 2FA!")
+        self.showMainWindow()
+
+    def showMainWindow (self, skipped_login = False):
         """Display the main window of the program"""
         
-        # Thankfully, via custom classes, separating user info is this easy.
-        friends = self.client.friends
+        if skipped_login:
+            print("Logged in via auth cookie.")
+
+        print("TODO: Implement main program loop and functionality.")
+
+        # # Thankfully, via custom classes, separating user info is this easy.
+        # friends = self.client.friends
         
-        # Load both the main UI and options files.
-        main_ui_file = QFile("interface/main.ui")
-        # options_ui_file = QFile("interface/options.ui")
+        # # Load both the main UI and options files.
+        # main_ui_file = QFile("interface/main.ui")
+        # # options_ui_file = QFile("interface/options.ui")
 
-        # Ready each of them to be shown at any moment.
-        self.window = self.loader.load(main_ui_file)
-        # self.currentPopup = self.loader.load(options_ui_file)
+        # # Ready each of them to be shown at any moment.
+        # self.window = self.loader.load(main_ui_file)
+        # # self.currentPopup = self.loader.load(options_ui_file)
 
-        # Show the main UI. Only open options later.
-        self.window.show()
+        # # Show the main UI. Only open options later.
+        # self.window.show()
 
-        sys.exit(self.app.exec())
+        # sys.exit(self.app.exec())
 
     def showMFA (self, failed_attempt = False):
         """Prompt for 2FA code and continue the login process."""

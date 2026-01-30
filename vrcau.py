@@ -4,6 +4,7 @@
 import vrchatapi
 import vrcaui
 import sys
+import utils
 
 from http.cookiejar import Cookie
 from vrchatapi.api import authentication_api
@@ -26,6 +27,11 @@ class VRCAU:
         self.auth_client = None
         self.current_user = None
 
+        for cookie in utils.CookieUtils.load_cookies("cookies.vrcau"):
+            self.client.rest_client.cookie_jar.set_cookie(cookie)
+
+        self.cookie_jar = self.client.rest_client.cookie_jar
+
     def __initClient (self):
         """Sets a custom User-Agent for the VRChat API client."""
         configuration = vrchatapi.Configuration(
@@ -37,20 +43,35 @@ class VRCAU:
         self.client.user_agent = "VRCAU/0.0.0 nathaniel.t.wasko@gmail.com"
         self.auth_client = authentication_api.AuthenticationApi(self.client)
 
-    def login (self):
-        """Log in to VRChat via a Selenium Webdriver using the provided credentials."""        
+    def login (self, c = False):
+        """Log in to VRChat via their API."""        
 
         self.__initClient()
 
+        if c:
+            # Attempt to use cookies to skip the login process.
+            if self.cookie_jar is not None:
+                try:
+                    self.client.rest_client.cookie_jar = self.cookie_jar
+                    self.auth_client = authentication_api.AuthenticationApi(self.client)
+                    self.user = self.auth_client.get_current_user()
+                except Exception as e:
+                    raise NoCookiesFoundException()
+            else:
+                raise NoCookiesFoundException()
+
         try:
-            # Call currentuser, as this will log you in if not already logged in.
+            # If the user does not have 2FA enabled, this will return proper data. Otherwise, move to the 2FA prompt.
             self.user = self.auth_client.get_current_user()
+            self.cookie_jar = self.client.rest_client.cookie_jar._cookies["api.vrchat.cloud"]["/"]
+
         except UnauthorizedException as e:
             # Status 200 indicates that MFA is required.
             if e.status == 200:
                 raise MFARequirementError(e)
             else:
                 raise LoginError()
+
         except vrchatapi.ApiException as e:
             raise ApiError()
 
@@ -73,14 +94,17 @@ class VRCAU:
         except vrchatapi.ApiException as e:
             raise ApiError()
 
+        # Now that we can guarantee the user is logged in, set their current information and keep track of their cookies.
         self.current_user = self.auth_client.get_current_user()
+        self.cookie_jar = self.client.rest_client.cookie_jar
 
     def destroy (self):
         """Destroy the current instance and securely save the required data if requested (Data is saved locally)."""
+        print("LOG: Entering destroy()")
         
         if self.save_login and self.current_user is not None:
             # The user has chosen to save their login info. Save the auth token securely via CookieJar.
-            print("TODO: Deal with cookies to allow logging in easier next time.")
+            utils.CookieUtils.store_cookies(self.cookie_jar, "cookies.vrcau")
 
         sys.exit()
 
@@ -98,6 +122,10 @@ class ApiError(Exception):
     """An exception to raise when an API error occurs."""
     def __init__ (self):
         super().__init__("An error occurred while communicating with the VRChat API.")
+
+class NoCookiesFoundException (Exception):
+    def __init__ (self):
+        super().__init__("No cookies were found to login with.")
 
 if __name__ == "__main__":
     vrcau = VRCAU()
