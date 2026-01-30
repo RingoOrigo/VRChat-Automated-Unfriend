@@ -18,6 +18,7 @@ class VRCAU:
         # Important variables to use throughout the program. As the user must be able to log in, we must use their credentials.
         # The auth token should be stored securely in order to speed up the login process upon future uses.
         # Have the user opt-in to saving their info for this purpose.
+        print("LOG: Running VRCAU init")
         self.username: str = username
         self.password: str = password
         self.auth_code: str = None
@@ -27,10 +28,16 @@ class VRCAU:
         self.auth_client = None
         self.current_user = None
 
-        for cookie in utils.CookieUtils.load_cookies("cookies.vrcau"):
-            self.client.rest_client.cookie_jar.set_cookie(cookie)
+        self.__initClient()
+        try:
+            cookies = utils.CookieUtils.load_cookies("cookies.vrcau")
+            for cookie in cookies:
+                print(cookie)
+                self.client.rest_client.cookie_jar.set_cookie(cookie)
 
-        self.cookie_jar = self.client.rest_client.cookie_jar
+            self.cookie_jar = self.client.rest_client.cookie_jar
+        except Exception as e:
+            self.cookie_jar = None
 
     def __initClient (self):
         """Sets a custom User-Agent for the VRChat API client."""
@@ -54,7 +61,7 @@ class VRCAU:
                 try:
                     self.client.rest_client.cookie_jar = self.cookie_jar
                     self.auth_client = authentication_api.AuthenticationApi(self.client)
-                    self.user = self.auth_client.get_current_user()
+                    self.current_user = self.auth_client.get_current_user()
                 except Exception as e:
                     raise NoCookiesFoundException()
             else:
@@ -87,6 +94,8 @@ class VRCAU:
                 self.auth_client.verify2_fa_email_code(two_factor_email_code=TwoFactorEmailCode(code=self.auth_code))
         except UnauthorizedException as e:
             if e.status == 401:
+                vrcaui.UIHandler.showMFA(failed_attempt=True)
+            if e.status == 400:
                 vrcaui.UIHandler.showMFA(failed_attempt=True)
             else:
                 print("Error verifying 2FA code.")

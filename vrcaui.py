@@ -18,6 +18,7 @@ class UIHandler:
     def showLogin (self):
 
         try: #Attempt to log in via cookies.
+            print("LOG: ATTEMPTING TO LOG IN VIA COOKIES")
             self.client.login(c = True)
         except vrcau.NoCookiesFoundException:
             # Proceed to normal login flow if cookies are unavailable or otherwise do not work.
@@ -63,7 +64,6 @@ class UIHandler:
             else:
                 print("Error verifying 2FA code")
 
-        print("LOG: Verified 2FA!")
         self.showMainWindow()
 
     def showMainWindow (self, skipped_login = False):
@@ -73,6 +73,7 @@ class UIHandler:
             print("Logged in via auth cookie.")
 
         print("TODO: Implement main program loop and functionality.")
+        print(self.client.current_user)
 
         # # Thankfully, via custom classes, separating user info is this easy.
         # friends = self.client.friends

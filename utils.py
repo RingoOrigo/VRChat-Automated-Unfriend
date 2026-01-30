@@ -14,26 +14,24 @@ class FileUtils:
         return os.path.join(base_path, rel_path)
     
 class CookieUtils:
-
-    # @staticmethod
-    # def make_cookie (name, value):
-    #     """Create a cookie to allow for a smoother login process later."""
-    #     return Cookie(0, name, value, None, False, "api.vrchat.cloud", True, False, "/", False, False, 173106866300, False, None, None, {})
     
     @staticmethod
     def store_cookies (cookies, file_name):
         """Locally store a user's cookie data for a smoother login process later."""
-        with open(file_name, "wb") as f:
+        with open(FileUtils.resource_path(file_name), "wb") as f:
             cookie_list = [c for c in cookies]
             pickle.dump(cookie_list, f)
 
     @staticmethod
     def load_cookies (file_name):
         """Retrieve locally stored cookies for use in the login process. Returns None if no cookies are found."""
-        if not os.path.exists(file_name):
+        
+        file = FileUtils.resource_path(file_name)
+        
+        if not os.path.exists(file):
             return None
         
-        with open(file_name, 'rb') as f:
+        with open(file, 'rb') as f:
             cookies = pickle.load(f)
 
         return cookies
