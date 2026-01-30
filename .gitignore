@@ -1,5 +1,8 @@
 # Byte-compiled / optimized / DLL files
 __pycache__/
+build/
+dist/
+*.spec
 *.py[codz]
 *$py.class
 current_user.txt

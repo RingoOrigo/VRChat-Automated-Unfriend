@@ -24,7 +24,6 @@ class VRCAU:
         self.save_login: bool = save_login
         self.client = None
         self.auth_client = None
-        
         self.current_user = None
 
     def __initClient (self):
@@ -75,7 +74,6 @@ class VRCAU:
             raise ApiError()
 
         self.current_user = self.auth_client.get_current_user()
-        print(self.current_user)
 
     def destroy (self):
         """Destroy the current instance and securely save the required data if requested (Data is saved locally)."""

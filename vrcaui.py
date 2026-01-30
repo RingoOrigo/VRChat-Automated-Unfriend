@@ -1,15 +1,16 @@
 import sys, vrcau
 
+from utils import FileUtils
 from vrchatapi.exceptions import UnauthorizedException
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtWidgets import QApplication
-from PySide6.QtCore import QFile, QIODevice
+from PySide6.QtCore import QFile
 
 class UIHandler:
     def __init__ (self):
         self.app = QApplication(sys.argv)
         self.loader = QUiLoader()
-        login_ui_file = QFile("interface/login.ui")
+        login_ui_file = QFile(FileUtils.resource_path("interface/login.ui"))
         self.window = self.loader.load(login_ui_file)
         self.client = vrcau.VRCAU()
         self.currentPopup = None
@@ -57,21 +58,27 @@ class UIHandler:
 
     def showMainWindow (self):
         """Display the main window of the program"""
+        
+        # Thankfully, via custom classes, separating user info is this easy.
+        friends = self.client.friends
+        
         # Load both the main UI and options files.
         main_ui_file = QFile("interface/main.ui")
-        options_ui_file = QFile("interface/options.ui")
+        # options_ui_file = QFile("interface/options.ui")
 
         # Ready each of them to be shown at any moment.
         self.window = self.loader.load(main_ui_file)
-        self.currentPopup = self.loader.lod(options_ui_file)
+        # self.currentPopup = self.loader.load(options_ui_file)
 
         # Show the main UI. Only open options later.
-        self.widow.show()
+        self.window.show()
+
+        sys.exit(self.app.exec())
 
     def showMFA (self, failed_attempt = False):
         """Prompt for 2FA code and continue the login process."""
 
-        mfa_ui_file = QFile("interface/mfa.ui")
+        mfa_ui_file = QFile(FileUtils.resource_path("interface/mfa.ui"))
         self.currentPopup = self.loader.load(mfa_ui_file)
         self.currentPopup.show()
 
@@ -80,24 +87,3 @@ class UIHandler:
 
         button = self.currentPopup.submitButton
         button.clicked.connect(lambda: self.setAuthInfo())
-
-# if __name__ == "__main__":
-
-#     # Initialize the login screen.
-#     app = QApplication(sys.argv)
-#     ui_file = QFile("interface/login.ui")
-#     loader = QUiLoader()
-#     ui_file.close()
-
-#     # Show the login screen.
-#     window = loader.load(ui_file)
-#     window.show()
-    
-#     # Connect the login button to the info retrieval function.
-#     login_button = window.loginButton
-#     login_button.clicked.connect(lambda: getLoginInfo(window))
-
-#     # Ready the error text field
-#     window.errorField.setVisible(False)
-
-#     sys.exit(app.exec())
