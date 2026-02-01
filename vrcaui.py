@@ -1,3 +1,6 @@
+# vrcaui.py
+# This is where all of the GUI processing will take place.
+
 import sys, vrcau
 
 from utils import FileUtils
@@ -16,13 +19,10 @@ class UIHandler:
         self.currentPopup = None
 
     def showLogin (self):
+        """Begin the login flow by showing the login screen."""
 
-        try: #Attempt to log in via cookies.
-            print("LOG: ATTEMPTING TO LOG IN VIA COOKIES")
-            self.client.login(c = True)
-        except vrcau.NoCookiesFoundException:
+        if self.client.current_user == None:
             # Proceed to normal login flow if cookies are unavailable or otherwise do not work.
-            print("LOG: Cookies not found. Logging in normally")
             self.window.show()
 
             login_button = self.window.loginButton
@@ -37,7 +37,9 @@ class UIHandler:
 
             sys.exit(self.app.exec())
 
-        self.showMainWindow(skipped_login = True)
+        # At this point, cookies have been used to successfully log into the app.
+        # As it is, thus, not necessary to prompt for 2FA or even login info, just move immediately to the main screen.
+        self.showMainWindow()
 
     def setLoginInfo (self):
         self.client.username = self.window.usernameField.text().strip()
@@ -66,14 +68,13 @@ class UIHandler:
 
         self.showMainWindow()
 
-    def showMainWindow (self, skipped_login = False):
+    def showMainWindow (self):
         """Display the main window of the program"""
+        user = self.client.current_user
         
-        if skipped_login:
-            print("Logged in via auth cookie.")
-
-        print("TODO: Implement main program loop and functionality.")
-        print(self.client.current_user)
+        print(f"Hello, {user.display_name}!")
+        print(f"You currently have {len(user.friends)} friends.")
+        print(f"Of them, \n     {len(user.active_friends)} {"are" if len(user.active_friends) != 1 else "is"} active in some way, \n     {len(user.online_friends)} {"are" if len(user.online_friends) != 1 else "is"} online, and \n     {len(user.offline_friends)} {"are" if len(user.offline_friends) != 1 else "is"} offline!")
 
         # # Thankfully, via custom classes, separating user info is this easy.
         # friends = self.client.friends

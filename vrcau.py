@@ -1,12 +1,8 @@
-# VRChat Automated Unfriend - Core
-# This is where the bulk of the program's logic is.
+# vrcau.py
+# This is where most of the program's inner logic will take place.
 
-import vrchatapi
-import vrcaui
-import sys
-import utils
+import vrchatapi, vrcaui, sys, utils
 
-from http.cookiejar import Cookie
 from vrchatapi.api import authentication_api
 from vrchatapi.exceptions import UnauthorizedException
 from vrchatapi.models.two_factor_auth_code import TwoFactorAuthCode
@@ -18,7 +14,7 @@ class VRCAU:
         # Important variables to use throughout the program. As the user must be able to log in, we must use their credentials.
         # The auth token should be stored securely in order to speed up the login process upon future uses.
         # Have the user opt-in to saving their info for this purpose.
-        print("LOG: Running VRCAU init")
+
         self.username: str = username
         self.password: str = password
         self.auth_code: str = None
@@ -32,15 +28,17 @@ class VRCAU:
         try:
             cookies = utils.CookieUtils.load_cookies("cookies.vrcau")
             for cookie in cookies:
-                print(cookie)
                 self.client.rest_client.cookie_jar.set_cookie(cookie)
 
             self.cookie_jar = self.client.rest_client.cookie_jar
+            self.login(c = True)
         except Exception as e:
             self.cookie_jar = None
 
     def __initClient (self):
         """Sets a custom User-Agent for the VRChat API client."""
+        # In all honesty, this is likely entirely not needed, though I feel I've worked myself into a trap with this function.
+        # It doesn't use too much overhead, so I will refactor it out later. It is on the chopping block.
         configuration = vrchatapi.Configuration(
             username = self.username,
             password = self.password
@@ -84,14 +82,18 @@ class VRCAU:
 
     def authenticate (self, method: str = "code"):
         """Completes the login process via Two-Factor Authentication."""
+
+        # If there is no recorded 2FA code yet, prompt the user for one.
         if self.auth_code is None:
             vrcaui.UIHandler.showMFA()
 
+        # As there are two different 2FA methods available to users, perform different functions based on the specified method.
         try:
             if method == "code":
                 self.auth_client.verify2_fa(two_factor_auth_code=TwoFactorAuthCode(code=self.auth_code))
             else:
                 self.auth_client.verify2_fa_email_code(two_factor_email_code=TwoFactorEmailCode(code=self.auth_code))
+        # Handle incorrect auth codes by pulling up the menu a second time.
         except UnauthorizedException as e:
             if e.status == 401:
                 vrcaui.UIHandler.showMFA(failed_attempt=True)
@@ -109,7 +111,6 @@ class VRCAU:
 
     def destroy (self):
         """Destroy the current instance and securely save the required data if requested (Data is saved locally)."""
-        print("LOG: Entering destroy()")
         
         if self.save_login and self.current_user is not None:
             # The user has chosen to save their login info. Save the auth token securely via CookieJar.
@@ -133,10 +134,6 @@ class ApiError(Exception):
         super().__init__("An error occurred while communicating with the VRChat API.")
 
 class NoCookiesFoundException (Exception):
+    """An exception to raise when cookies are unexpectedly not found."""
     def __init__ (self):
         super().__init__("No cookies were found to login with.")
-
-if __name__ == "__main__":
-    vrcau = VRCAU()
-    vrcau.login()
-    vrcau.destroy()
