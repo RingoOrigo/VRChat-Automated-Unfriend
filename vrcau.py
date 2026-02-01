@@ -1,10 +1,10 @@
 # vrcau.py
 # This is where most of the program's inner logic will take place.
 
-import vrchatapi, vrcaui, sys, utils
+import vrchatapi, vrcaui, sys, utils, time, random
 
-from vrchatapi.api import authentication_api
-from vrchatapi.exceptions import UnauthorizedException
+from vrchatapi.api import authentication_api, friends_api
+from vrchatapi.exceptions import UnauthorizedException, ApiException
 from vrchatapi.models.two_factor_auth_code import TwoFactorAuthCode
 from vrchatapi.models.two_factor_email_code import TwoFactorEmailCode
 
@@ -108,6 +108,61 @@ class VRCAU:
         # Now that we can guarantee the user is logged in, set their current information and keep track of their cookies.
         self.current_user = self.auth_client.get_current_user()
         self.cookie_jar = self.client.rest_client.cookie_jar
+
+    def getFriends (self, offline = False):
+        """Parse through the friends list of the current_user, returning an array of all friends."""
+
+        friends_client = friends_api.FriendsApi(self.client)
+        # Define the number of friends that need to be retrieved. This is important as only up to 100 can be obtained at a time.
+        num_friends = len(self.current_user.offline_friends) if offline else (len(self.current_user.active_friends) + len(self.current_user.online_friends))
+        parsed_friends = []
+
+        # Request as many friends as possible until all friends have been retrieved.
+        i = 0
+        limit_break = 1 # Final Fantasy reference!
+        while i < num_friends:
+            # Wrap logic in try/except to account for the likely possibility of ratelimits.
+            try:
+                # n = 100 is the largest possible value that VRChat's API will accept.
+                # offset = i prevents retrieving the same friend multiple times by setting the new response to start listing where the last one stopped.
+                friends = friends_client.get_friends(offset = i, n = 100, offline = offline)
+
+                i += 100
+
+                # Place each friend in the parsed_friends list.
+                for friend in friends:
+                    parsed_friends.append(friend)
+
+            except ApiException as e:
+                # Check for ratelimit code.
+                if e.status == 429:
+                    # Sleep the thread for an exponentially increasing amount of time each time a ratelimit is encountered.
+                    time.sleep((2 ** limit_break) + random.uniform(0, 1))
+                    limit_break += 1
+                    # Return to the start of the loop
+                    continue
+                else:
+                    print(f"I have no idea what happened. Please inform me on discord @ringoorigo\nCode: {e.status}\n{e.reason}")
+
+        return parsed_friends
+    
+    def unfriend (self, user_id):
+        """Unfriend the provided user. Returns true if user was successfully unfriended, false if otherwise, and an exception if ratelimited."""
+        friends_client = friends_api.FriendsApi(self.client)\
+        
+        # Wrap logic in try/except in case of API Errors or ratelimits.
+        try:
+            friends_client.unfriend(user_id)
+        
+        # If an exception is encountered, either return false or raise a ratelimit exception to be handled in parent function.
+        except ApiException as e:
+            match(e.status):
+                case 400:
+                    return False
+                case 401:
+                    return False
+                case 429:
+                    raise e
 
     def destroy (self):
         """Destroy the current instance and securely save the required data if requested (Data is saved locally)."""

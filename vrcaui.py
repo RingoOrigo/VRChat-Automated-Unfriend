@@ -76,6 +76,12 @@ class UIHandler:
         print(f"You currently have {len(user.friends)} friends.")
         print(f"Of them, \n     {len(user.active_friends)} {"are" if len(user.active_friends) != 1 else "is"} active in some way, \n     {len(user.online_friends)} {"are" if len(user.online_friends) != 1 else "is"} online, and \n     {len(user.offline_friends)} {"are" if len(user.offline_friends) != 1 else "is"} offline!")
 
+        # Get lists of online and offline friends to later combine.
+        # While online friends are not necessary if unfriending based on inactivity, they will have a use later as the program expands.
+        offlineFriends = self.client.getFriends(offline = True)
+        onlineFriends = self.client.getFriends()
+
+        friends = offlineFriends + onlineFriends
         # # Thankfully, via custom classes, separating user info is this easy.
         # friends = self.client.friends
         
