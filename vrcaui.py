@@ -1,12 +1,12 @@
 # vrcaui.py
 # This is where all of the GUI processing will take place.
 
-import sys, vrcau
+import sys, vrcau, time, random
 
 from utils import FileUtils
 from datetime import datetime, timezone, timedelta
 from dateutil.relativedelta import relativedelta
-from vrchatapi.exceptions import UnauthorizedException
+from vrchatapi.exceptions import UnauthorizedException, ApiException
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtWidgets import QApplication
 from PySide6.QtCore import QFile
@@ -118,9 +118,18 @@ class UIHandler:
     def confirm (self):
         """Perform the required logic if the user confirms the unfriending confirmation"""
         self.current_popup.close()
-        for friend in self.unfriend_list:
-            print(f"Unfriending {friend.display_name}")
-            # TODO: Implement unfriending every person in list. Avoid rate-limits.
+        limit_break = 1
+        
+        i = 0
+        while i < len(self.unfriend_list):
+            try:
+                self.client.unfriend(self.unfriend_list[i].id)
+                i += 1
+            except ApiException as e:
+                if e.status == 429:
+                    time.sleep((2 ** limit_break) + random.uniform(0, 2))
+                    limit_break += 1
+                    continue
 
     def promptConfirmationDialog (self):
         """Show confirmation dialog for unfriending the specified users. Proceed to unfriending phase after confirmation."""
