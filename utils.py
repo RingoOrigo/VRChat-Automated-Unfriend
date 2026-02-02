@@ -1,4 +1,29 @@
-import os, sys, pickle
+import os, sys, pickle, time, random
+from vrchatapi.exceptions import ApiException
+
+class APIUtils:
+    """A helper class to implement an exponential delay to decrease the odds of being rate-limited."""
+    limit_break = 1
+    
+    @staticmethod
+    def make_delayed_request (request, *args, **kwargs):
+        """Delay making a request by a set amount of time. Implement exponential backoff."""
+        exp_backoff = 2 ** APIUtils.limit_break
+        random_mod = random.uniform(0, 1)
+
+        time.sleep(exp_backoff + random_mod)
+
+        try: 
+            result = request(*args, **kwargs)
+            APIUtils.limit_break = 1
+            return result
+        
+        except ApiException as e:
+            if e.status == 429:
+                APIUtils.limit_break += 1
+                return APIUtils.make_delayed_request(request, *args, **kwargs)
+            else:
+                raise e
 
 class FileUtils:
     

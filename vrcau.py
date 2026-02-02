@@ -59,7 +59,7 @@ class VRCAU:
                 try:
                     self.client.rest_client.cookie_jar = self.cookie_jar
                     self.auth_client = authentication_api.AuthenticationApi(self.client)
-                    self.current_user = self.auth_client.get_current_user()
+                    self.current_user = utils.APIUtils.make_delayed_request(self.auth_client.get_current_user)
                 except Exception as e:
                     raise NoCookiesFoundException()
             else:
@@ -67,7 +67,7 @@ class VRCAU:
 
         try:
             # If the user does not have 2FA enabled, this will return proper data. Otherwise, move to the 2FA prompt.
-            self.user = self.auth_client.get_current_user()
+            self.user = utils.APIUtils.make_delayed_request(self.auth_client.get_current_user)
             self.cookie_jar = self.client.rest_client.cookie_jar._cookies["api.vrchat.cloud"]["/"]
 
         except UnauthorizedException as e:
@@ -88,6 +88,7 @@ class VRCAU:
             vrcaui.UIHandler.showMFA()
 
         # As there are two different 2FA methods available to users, perform different functions based on the specified method.
+        # Due to the time-sensitive nature of 2FA verification, this is the only API call I am choosing not to wrap with an exponential delay.
         try:
             if method == "code":
                 self.auth_client.verify2_fa(two_factor_auth_code=TwoFactorAuthCode(code=self.auth_code))
@@ -106,7 +107,7 @@ class VRCAU:
             raise ApiError()
 
         # Now that we can guarantee the user is logged in, set their current information and keep track of their cookies.
-        self.current_user = self.auth_client.get_current_user()
+        self.current_user = utils.APIUtils.make_delayed_request(self.auth_client.get_current_user)
         self.cookie_jar = self.client.rest_client.cookie_jar
 
     def getFriends (self, offline = False):
@@ -119,13 +120,12 @@ class VRCAU:
 
         # Request as many friends as possible until all friends have been retrieved.
         i = 0
-        limit_break = 1 # Final Fantasy reference!
         while i < num_friends:
             # Wrap logic in try/except to account for the likely possibility of ratelimits.
             try:
                 # n = 100 is the largest possible value that VRChat's API will accept.
                 # offset = i prevents retrieving the same friend multiple times by setting the new response to start listing where the last one stopped.
-                friends = friends_client.get_friends(offset = i, n = 100, offline = offline)
+                friends = utils.APIUtils.make_delayed_request(friends_client.get_friends, offset = i, n = 100, offline = offline)
 
                 i += 100
 
@@ -134,15 +134,7 @@ class VRCAU:
                     parsed_friends.append(friend)
 
             except ApiException as e:
-                # Check for ratelimit code.
-                if e.status == 429:
-                    # Sleep the thread for an exponentially increasing amount of time each time a ratelimit is encountered.
-                    time.sleep((2 ** limit_break) + random.uniform(0, 1))
-                    limit_break += 1
-                    # Return to the start of the loop
-                    continue
-                else:
-                    print(f"I have no idea what happened. Please inform me on discord @ringoorigo\nCode: {e.status}\n{e.reason}")
+                print(f"I have no idea what happened. Please inform me on discord @ringoorigo\nCode: {e.status}\n{e.reason}")
 
         return parsed_friends
     
@@ -152,7 +144,7 @@ class VRCAU:
         
         # Wrap logic in try/except in case of API Errors or ratelimits.
         try:
-            friends_client.unfriend(user_id)
+            friends_client.utils.APIUtils.make_delayed_request(friends_client.unfriend, userId = user_id)
         # If an exception is encountered, either return false or raise a ratelimit exception to be handled in parent function.
         except ApiException as e:
             match(e.status):

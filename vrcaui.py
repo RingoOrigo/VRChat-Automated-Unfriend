@@ -1,9 +1,8 @@
 # vrcaui.py
 # This is where all of the GUI processing will take place.
 
-import sys, vrcau, time, random
+import sys, vrcau, time, random, utils
 
-from utils import FileUtils
 from datetime import datetime, timezone, timedelta
 from dateutil.relativedelta import relativedelta
 from vrchatapi.exceptions import UnauthorizedException, ApiException
@@ -15,7 +14,7 @@ class UIHandler:
     def __init__ (self):
         self.app = QApplication(sys.argv)
         self.loader = QUiLoader()
-        login_ui_file = QFile(FileUtils.resource_path("interface/login.ui"))
+        login_ui_file = QFile(utils.FileUtils.resource_path("interface/login.ui"))
         self.window = self.loader.load(login_ui_file)
         self.client = vrcau.VRCAU()
         self.current_popup = None
@@ -118,18 +117,9 @@ class UIHandler:
     def confirm (self):
         """Perform the required logic if the user confirms the unfriending confirmation"""
         self.current_popup.close()
-        limit_break = 1
         
-        i = 0
-        while i < len(self.unfriend_list):
-            try:
-                self.client.unfriend(self.unfriend_list[i].id)
-                i += 1
-            except ApiException as e:
-                if e.status == 429:
-                    time.sleep((2 ** limit_break) + random.uniform(0, 2))
-                    limit_break += 1
-                    continue
+        for friend in self.unfriend_list:
+            self.client.unfriend(friend.id)
 
     def promptConfirmationDialog (self):
         """Show confirmation dialog for unfriending the specified users. Proceed to unfriending phase after confirmation."""
@@ -145,9 +135,9 @@ class UIHandler:
         """Display the main window of the program"""
 
         # Get lists of online and offline friends to later combine.
-        # While online friends are not necessary if unfriending based on inactivity, they will have a use later as the program expands.
+        # As onlineFriends is entirely unnecessary for the program's current execution loop, it is currently commented out to save on API calls.
         offlineFriends = self.client.getFriends(offline = True)
-        onlineFriends = self.client.getFriends()
+        onlineFriends = [] #self.client.getFriends()
 
         friends = offlineFriends + onlineFriends
 
@@ -179,7 +169,7 @@ class UIHandler:
     def showMFA (self, failed_attempt = False):
         """Prompt for 2FA code and continue the login process."""
 
-        mfa_ui_file = QFile(FileUtils.resource_path("interface/mfa.ui"))
+        mfa_ui_file = QFile(utils.FileUtils.resource_path("interface/mfa.ui"))
         self.current_popup = self.loader.load(mfa_ui_file)
         self.current_popup.show()
 
