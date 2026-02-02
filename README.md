@@ -1,82 +1,54 @@
 ## Quick-Links
 
-- [Feature List](https://github.com/RingoOrigo/VRChat-Automated-Unfriend#features)
-- [Usage Guide](https://github.com/RingoOrigo/VRChat-Automated-Unfriend#usage-guide)
-- [Dependencies](https://github.com/RingoOrigo/VRChat-Automated-Unfriend#dependencies)
-- [Contributing](https://github.com/RingoOrigo/VRChat-Automated-Unfriend#contributing)
-- For extra assistance that may not be covered in this readme, ask for help from [Ouroboros](https://discord.gg/e3ffGxdxzM)
-# Automatically Unfriend Users on VRChat
+- [Usage Guide](#usage-guide)
+- [Frequently Asked Questions](#frequently-asked-questions)
+- [Data Privacy](#data-privacy-and-usage)
+- [Handling Rate-Limits](#a-note-on-rate-limits)
+- [Contribution Guidelines](#contribution-guidelines)
 
-#### For what purpose?
+# Automatically Unfriend Users on VRChat with VRCAU
+
 It is all too common to have people on VRChat friending others in order to build trust to increase their [Trust Rank](https://docs.vrchat.com/docs/vrchat-safety-and-trust-system#trust-rank) and reach the coveted Trusted User status. 
 
-As a direct result, many users on VRChat have lists of "friends" consisting of hundreds, if not thousands, of users that are barely known or interacted with. Despite this, the process of unfriending hundreds of people at a time is tedious and time-consuming as the fastest way is to click through several prompts on the [VRChat Website](https://vrchat.com/home).
-
-#### I don't want to unadd all of my friends, though!!
-VRCU is not made to unfriend absolutely everyone on your friends list. The program has its own system in place to make sure that you keep the people closest to you friended.
-
-
-# Features
-
-#### Current
-*The script is currently incredibly basic*
-- Specify users that will not be unfriended by entering their usernames into the program's console.
-- Unfriend all users that are not specified to stay friended.
-
-#### Planned
-- User-editable config file
-- Cleaner EXE build
-- GUI
-- Make use of VRChat API
-    - Have the script rely on the API and its own GUI instead of a browser session opened by itself.
+As a direct result, many users on VRChat have lists of "friends" consisting of hundreds, if not thousands, of users that are barely known or interacted with. Despite this, the process of unfriending hundreds of people at a time is tedious and time-consuming, as the fastest way is to click through several prompts on the [VRChat Website](https://vrchat.com/home).
 
 # Usage Guide
 
-1. Download the latest version from the [releases tab](https://github.com/RingoOrigo/VRChat-Automated-Unfriend/releases)
-    - Previous releases are not guaranteed to work, so make sure you are always using the latest one.
-    - If you are intending on using the VRCU.py file, ensure all dependencies are installed.
-2. Run the file and follow the prompts. Below are them in order.
-    - `Please input your VRChat username / email`
-        - Type in the console your username or email address that you use to log in. This is CASE SENSITIVE!
-        - Press enter to proceed.
-    - `Please input your VRChat password`
-        - Type in the console the password associated with the username you entered previously. This is CASE SENSITIVE!
-        - *Your username and password are not stored by this program. They will never be shared.*
-        - Press enter to proceed.
-    - `Please input the usernames of any friends you would like to keep on your friends list`
-        - Go through your current friends list, and choose the friends you wish to keep added. 
-        - Paste one username per line (press enter after each username). Usernames are CASE SENSITIVE!
-        - Type `end` into the console and press enter when you have entered the username of each friend you wish to keep.
-3. Find your 2-Factor Authentication code.
-    - These are either found in the inbox of your associated email OR your authenticator app.
-    - Enter the code into the website in the browser opened by the program.
-    - Ensure that the friends list on the side of the screen is visible.
-4. Type the number `1` into the console in order to continue with the unfriending process.
-    - There is no going back from this! Typing 1 into the console WILL begin unfriending every user not whitelisted.
+VRCAU is made to be as intuitive as possible. Below is a simple outline for general use.
+1. Download the [latest release](https://github.com/RingoOrigo/VRChat-Automated-Unfriend/releases/latest).
+2. Run the file and follow the GUI flow.
+    - Screen 1: Log in with your VRChat information. See [VRCAU's Data Policy](#data-privacy-and-usage) if you are concerned about logging in.
+    - Screen 2 (Optional): Input your 2FA code (if you have 2FA enabled)
+    - Screen 3: Unimplemented as of this time (01.February.2026)
 
+# Frequently Asked Questions
+### What data is collected/stored?
+Please read the [Data Privacy and Usage](#data-privacy-and-usage) section, as it goes into much more detail, but in general all data used is publicly accesible with the exception of authentication cookies, which are stored locally and used only to prevent the user from being prompted to login several times.
+### I encountered this bug/crash/issue! Help!!
+Please [open a new issue](https://github.com/RingoOrigo/VRChat-Automated-Unfriend/issues/new) and include as much information about what you are experiencing as possible. Please label the issue appropriately.
+### I don't see my question here, can you answer it?
+Naturally, as this program is still awaiting an official release, your question likely is not here. This FAQ section will frequently be updated as more and more questions are received, but for pressing matters, please contact me on Discord (@ringoorigo).
 
-# Running the Python File
-*This section includes much less hand-holding, as it is tailored to a more technical audience*
-### Dependencies
-- [Python](https://python.org/downloads)
-    - Script originally built using Python 3.10
-- [Selenium](https://pypi.org/project/selenium/) 
-    - Selenium is the only dependency that must be installed through pip.
-    - `pip install -U selenium`
+# Data Privacy and Usage
+Your user information is yours and yours alone. Below is a detailed outline regarding the data used, collected, and stored by VRCAU along with *how* each of those activities occur.
+### 1. Session Authentication Data (Cookies)
+Cookies make the internet function, and in this case, your cookies are stored *locally* (in your system's application data directory) only when clicking the *Remember Me* button on the program's login screen. This is done to allow the end-user to skip the login process and to prevent making VRChat's API angry.
 
-### Running the Python File
-1. Open a command line in the python file's directory.
-2. `python VRCU.py`
-    - Replace `VRCU` with the filename (If you changed it)
-3. Follow [Usage Guide](https://github.com/RingoOrigo/VRChat-Automated-Unfriend/edit/main/README.md#usage-guide)
+This is the only data that VRCAU stores for later use, and it can be easily deleted manually at `{data_dir}/VRCAU/cookies.vrcau`.
+### 2. Profile Information
+In order to personalize the experience of VRCAU, basic profile information is obtained from VRChat's API. For more information on what exactly VRChat's API returns, read the community written documentation for the [get_current_user](https://vrchat.community/reference/get-current-user) API call.
 
-### Building Your Own EXE from the Python File
-1. Install [PyInstaller](https://pyinstaller.org/en/stable/)
-    - `pip install -U pyinstaller`
-2. Open a command line in the python file's directory.
-3. `python -m PyInstaller VRCU.py`
-    - Replace `VRCU` with the filename (If you changed it)
-    
-    
-# Contributing
-You can contribute in a number of ways. Pull requests are recommended and preferred.
+None of this data is stored by VRCAU locally or otherwise.
+
+### 3. Friendship Data
+For VRCAU to function, data must be obtained from your VRChat friends list. The most important data is the `last_activity` and `last_login`, which are used to see which friends have been inactive for the longest periods of time. For more information on all of the information VRCAU receives, read the community written documentation for the [get_friends](https://vrchat.community/reference/get-friends) API call.
+
+None of your friends' data is stored by VRCAU locally or otherwise.
+
+# A Note on Rate-Limits
+VRChat's API is not intended for use outside of the VRChat company. As such, little is known about exact limits, and consistency is not necessarily guaranteed. In order to protect your account, as well as VRCAU itself, VRCAU will automatically make short pauses if VRChat's API rate-limits it.
+
+# Contribution Guidelines
+Contribution is possible through a number of different ways. If you are confident in your ability to fix a problem or implement a new feature yourself, [create a fork](https://github.com/RingoOrigo/VRChat-Automated-Unfriend/fork) and [open a pull request](https://github.com/RingoOrigo/VRChat-Automated-Unfriend/compare/)!
+
+If you wish to otherwise contribute, feel free to [open a new issue](https://github.com/RingoOrigo/VRChat-Automated-Unfriend/issues/new) with the "Enhancement" label, being as detailed as possible with what you wish to contribute.
