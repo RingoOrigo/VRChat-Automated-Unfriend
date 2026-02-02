@@ -26,7 +26,6 @@ class FileUtils:
             os.makedirs(path)
         
         return os.path.join(path, rel_path)
-
     
 class CookieUtils:
     
@@ -50,4 +49,3 @@ class CookieUtils:
             cookies = pickle.load(f)
 
         return cookies
-

@@ -148,12 +148,11 @@ class VRCAU:
     
     def unfriend (self, user_id):
         """Unfriend the provided user. Returns true if user was successfully unfriended, false if otherwise, and an exception if ratelimited."""
-        friends_client = friends_api.FriendsApi(self.client)\
+        friends_client = friends_api.FriendsApi(self.client)
         
         # Wrap logic in try/except in case of API Errors or ratelimits.
         try:
             friends_client.unfriend(user_id)
-        
         # If an exception is encountered, either return false or raise a ratelimit exception to be handled in parent function.
         except ApiException as e:
             match(e.status):

@@ -4,6 +4,8 @@
 import sys, vrcau
 
 from utils import FileUtils
+from datetime import datetime, timezone, timedelta
+from dateutil.relativedelta import relativedelta
 from vrchatapi.exceptions import UnauthorizedException
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtWidgets import QApplication
@@ -16,7 +18,8 @@ class UIHandler:
         login_ui_file = QFile(FileUtils.resource_path("interface/login.ui"))
         self.window = self.loader.load(login_ui_file)
         self.client = vrcau.VRCAU()
-        self.currentPopup = None
+        self.current_popup = None
+        self.unfriend_list = None
 
     def showLogin (self):
         """Begin the login flow by showing the login screen."""
@@ -55,8 +58,8 @@ class UIHandler:
             self.window.errorField.setVisible(True)
 
     def setAuthInfo (self):
-        self.currentPopup.close()
-        self.client.auth_code = self.currentPopup.mfaField.text().strip()
+        self.current_popup.close()
+        self.client.auth_code = self.current_popup.mfaField.text().strip()
 
         try:
             self.client.authenticate()
@@ -68,13 +71,69 @@ class UIHandler:
 
         self.showMainWindow()
 
+    def toggleMenuWithIndex (self, menu, index):
+        """Enable the specified menu based on the given index"""
+        
+        if index == 4:
+            menu.setVisible(True)
+            print()
+        else:
+            menu.setVisible(False)
+
+    def parseUnfriendList (self, friends, text_display, cutoff_index, selected_date):
+        """Parse what friends will be removed, and update the preview list accordingly."""
+        cutoff_date = datetime.now(timezone.utc)
+        self.unfriend_list = []
+
+        match cutoff_index:
+            case 0: # User selects past day
+                cutoff_date = cutoff_date - timedelta(hours = 24)
+            case 1: # User selects past week
+                cutoff_date = cutoff_date - timedelta(weeks = 1)
+            case 2: # User selects past month. Use relativedelta to account for months like february without much effort
+                cutoff_date = cutoff_date - relativedelta(months = 1)
+            case 3: # User selects past year
+                cutoff_date = cutoff_date - relativedelta(years = 1)
+            case 4:
+                py_date = selected_date.startOfDay().toPython()
+                cutoff_date = py_date.replace(tzinfo = timezone.utc)
+
+        # Loop through all friends and add them to the unfriend list if they do not meet the specified recent activity.
+        for friend in friends:
+            last_activity_time = friend.last_activity
+            if last_activity_time < cutoff_date:
+                self.unfriend_list.append(friend)
+        
+        # Update the list of users that will be unfriended.
+        unfriend_parsed_text = ""
+        for friend in self.unfriend_list:
+            unfriend_parsed_text += f"{friend.display_name}\n"
+
+        text_display.setText(unfriend_parsed_text)
+
+    def deny (self):
+        """Perform the required logic if the user denies the unfriending confirmation"""
+        self.current_popup.close()
+
+    def confirm (self):
+        """Perform the required logic if the user confirms the unfriending confirmation"""
+        self.current_popup.close()
+        for friend in self.unfriend_list:
+            print(f"Unfriending {friend.display_name}")
+            # TODO: Implement unfriending every person in list. Avoid rate-limits.
+
+    def promptConfirmationDialog (self):
+        """Show confirmation dialog for unfriending the specified users. Proceed to unfriending phase after confirmation."""
+        self.current_popup.show()
+
+        confirm_button = self.current_popup.confirmButton
+        deny_button = self.current_popup.denyButton
+
+        deny_button.clicked.connect(lambda: self.deny())
+        confirm_button.clicked.connect(lambda: self.confirm())
+
     def showMainWindow (self):
         """Display the main window of the program"""
-        user = self.client.current_user
-        
-        print(f"Hello, {user.display_name}!")
-        print(f"You currently have {len(user.friends)} friends.")
-        print(f"Of them, \n     {len(user.active_friends)} {"are" if len(user.active_friends) != 1 else "is"} active in some way, \n     {len(user.online_friends)} {"are" if len(user.online_friends) != 1 else "is"} online, and \n     {len(user.offline_friends)} {"are" if len(user.offline_friends) != 1 else "is"} offline!")
 
         # Get lists of online and offline friends to later combine.
         # While online friends are not necessary if unfriending based on inactivity, they will have a use later as the program expands.
@@ -82,31 +141,41 @@ class UIHandler:
         onlineFriends = self.client.getFriends()
 
         friends = offlineFriends + onlineFriends
-        # # Thankfully, via custom classes, separating user info is this easy.
-        # friends = self.client.friends
+
+        # Load both the main UI and options files.
+        main_ui_file = QFile("interface/main.ui")
+        confirm_ui_file = QFile("interface/confirm.ui")
+
+        # Ready each of them to be shown at any moment.
+        self.window = self.loader.load(main_ui_file)
+        self.current_popup = self.loader.load(confirm_ui_file)
         
-        # # Load both the main UI and options files.
-        # main_ui_file = QFile("interface/main.ui")
-        # # options_ui_file = QFile("interface/options.ui")
+        # Keep track of certain on-screen fields.
+        date_select = self.window.dateBox
+        drop_down_menu = self.window.dropdownBox
+        parse_button = self.window.parseButton
+        unfriend_button = self.window.unfriendButton
+        parsed_list_text = self.window.parsedListText
 
-        # # Ready each of them to be shown at any moment.
-        # self.window = self.loader.load(main_ui_file)
-        # # self.currentPopup = self.loader.load(options_ui_file)
+        date_select.setVisible(False)
+        drop_down_menu.currentIndexChanged.connect(lambda: self.toggleMenuWithIndex(date_select, drop_down_menu.currentIndex()))
+        parse_button.clicked.connect(lambda: self.parseUnfriendList(friends, parsed_list_text, drop_down_menu.currentIndex(), date_select.date()))
+        unfriend_button.clicked.connect(lambda: self.promptConfirmationDialog())
 
-        # # Show the main UI. Only open options later.
-        # self.window.show()
+        # Show the main UI. Only open options later.
+        self.window.show()
 
-        # sys.exit(self.app.exec())
+        sys.exit(self.app.exec())
 
     def showMFA (self, failed_attempt = False):
         """Prompt for 2FA code and continue the login process."""
 
         mfa_ui_file = QFile(FileUtils.resource_path("interface/mfa.ui"))
-        self.currentPopup = self.loader.load(mfa_ui_file)
-        self.currentPopup.show()
+        self.current_popup = self.loader.load(mfa_ui_file)
+        self.current_popup.show()
 
         if not failed_attempt:
-            self.currentPopup.errorField.setVisible(False)
+            self.current_popup.errorField.setVisible(False)
 
-        button = self.currentPopup.submitButton
+        button = self.current_popup.submitButton
         button.clicked.connect(lambda: self.setAuthInfo())
